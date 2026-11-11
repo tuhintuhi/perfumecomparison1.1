@@ -1,0 +1,26 @@
+# Builds the Windows .exe and Mac .app in the cloud (no Python needed on your computer).
+# Put this file at .github/workflows/build.yml in a GitHub repo containing the other files.
+name: Build desktop apps
+on: [workflow_dispatch, push]
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            flags: --noconsole --onefile
+            name: PerfumeCompare-Windows
+          - os: macos-latest
+            flags: --windowed
+            name: PerfumeCompare-Mac
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install flask requests beautifulsoup4 pywebview pyinstaller
+      - run: pyinstaller ${{ matrix.flags }} --name PerfumeCompare desktop_app.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/
